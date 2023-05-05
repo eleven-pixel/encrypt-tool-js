@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SignMsg</title>
+    <script src="jquery-3.2.1.min.js" type= "text/javascript"></script>
+    <script src='bootstrap/js/bootstrap.min.js' type="text/javascript"></script>
+    <script src='plugins/bootstrapvalidator/js/bootstrapValidator.min.js' type="text/javascript"></script>
+    <script src="plugins/bootstrapvalidator/js/language/zh_CN.js"></script>
+    <link rel="stylesheet" type="text/css" href='bootstrap/css/bootstrap.min.css'>
+    
+    <script src='bullockchainjs.js' type="text/javascript"></script>
+</head>
+
+<body>
+    <div class='container'>
+    <h1>发币签名</h1>
+    <form class="form-horizontal">
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="secret">私钥</label>
+            <div class="col-sm-9"><input class="form-control"  type="text" id="secret"
+                value='KxwndeM2e2nLZNb2Hybb4A1DhWbYxUFhQXz6XxAAz9Jt7D8Znsr7'></div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="pubkey">公钥</label>
+            <div class="col-sm-9"><input class="form-control"  type="text" id="pubkey"></div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="address">Address</label>
+            <div class="col-sm-9"><input class="form-control"  type="text" id="address"></div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="msg">Msg</label>
+            <div class="col-sm-9"><textarea class="form-control" rows="3" id="msg"></textarea></div>
+        </div>
+        <div class="form-group" style="border: solid 2px #c0c0c0;padding-top: 10px;">
+            <div class="form-group">
+                <label for="" class=" col-sm-offset-1 col-sm-2 control-label">tokenName:</label>
+                <div class="col-sm-8"><input name="tokenName" type="text" class="form-control" maxlength="26" minlength="3" required></div>
+            </div>
+            <div class="form-group">
+                <label for="" class=" col-sm-offset-1 col-sm-2 control-label">number:</label>
+                <div class="col-sm-8"><input name="number" class="form-control" maxlength="20" required></div>
+            </div>
+            <div class="form-group">
+                <label for="" class=" col-sm-offset-1 col-sm-2 control-label">maximum:</label>
+                <div class="col-sm-8"><input name="maximum" value="-1.00000000"  class="form-control" maxlength="20" min="-1" required></div>
+            </div>
+            <div class="form-group">
+                <label for="" class=" col-sm-offset-1 col-sm-2 control-label">Address:</label>
+                <div class="col-sm-8"><input name="address" type="text" class="form-control" maxlength='64' required></div>
+            </div>
+            <div class="form-group">
+                <label for="" class=" col-sm-offset-1 col-sm-2 control-label">compName:</label>
+                <div class="col-sm-8"><input name="compName" type="text" class="form-control" maxlength="64" required></div>
+            </div>
+            <div class="form-group">
+                <label for="" class=" col-sm-offset-1 col-sm-2 control-label">compID:</label>
+                <div class="col-sm-8"><input name="compID" type="text" class="form-control" maxlength="32" required></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="MsgHash">Hash(Msg)</label>
+            <div class="col-sm-9"><input class="form-control"  type="text" id="msgHash"></div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="">Sign(Hash(Msg))</label>
+            <div class="col-sm-9"><input class="form-control"  type="text" id="signHash"></div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="">编码前:</label>
+            <div class="col-sm-9"><textarea class="form-control" rows="3" id="jsonObj"></textarea></div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="">编码后:</label>
+            <div class="col-sm-9"><textarea class="form-control" rows="5" id="encodeResult"></textarea></div>
+        </div>
+        <div class="form-group">
+            <label  class="col-sm-2 control-label" for="">解码数据</label>
+            <div class="col-sm-9"><textarea class="form-control" rows="8" id="decodeResult"></textarea></div>
+        </div>
+
+    </form>
+        <button class="btn btn-primary" type="submit" id='create'>随机生成/生成</button>
+        <button class="btn btn-success" type="submit" id='sign'>签名</button>
+        <button class="btn btn-info" type="submit" id='verify'>验证签名</button>
+        <button class="btn btn-info" type="submit" id='check'>参数校验</button>
+        <p />
+
+        <figure class="highlight">
+            <pre>
+                <code class='language-json' data-lang='json'  id='result'>
+
+                </code>
+            </pre>
+        </figure>
+    </div>
+<script>
+$(document).ready(function(){
+    function sortObjectKeys(obj){
+        var tmp={};
+        Object.keys(obj).sort().forEach(function(k){tmp[k]=obj[k]});
+        return tmp;
+    }
+
+    function parseAccount(str) {
+        var int64_max = 9223372036854775807
+        var strArray = str.split('.');
+    }
+
+    $('[name="tokenName"]').keyup(function(eve){
+        var name = $('[name="tokenName"]').val();
+        if (name != name.toUpperCase()) {
+            $('[name="tokenName"]').val(name.toUpperCase());
+        }
+    })
+    $('[name="number"], [name="maximum"]').blur(function(event){
+        var tempNum = event.target.value;
+        var arrNum = tempNum.split('.');
+        if (arrNum.length < 2) {
+            arrNum[1] = "00000000";
+            $(event.target).val(arrNum.join('.'));
+            return;
+        }
+        if ((arrNum[0] > 0) && arrNum[1].length < 8) {
+            arrNum[1] = Math.pow(10, 8-arrNum[1].length) * arrNum[1];
+        }
+        $(event.target).val(arrNum.join('.'));
+    })
+    
+    var int_64_max = ['92233720368','54775807'];
+    temp = $("form.form-horizontal").bootstrapValidator({
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            tokenName: {
+                group: '.col-sm-8',
+                message: "the tokenName is not valid",
+                validators: {
+                    stringLength: {
+                        min: 3,
+                        max: 26,
+                        message: 'The tokenName must be more than 3 and less than 26 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z][a-zA-Z0-9\-]{2,25}$/,
+                        message: 'The tokenName can only consist of alphabetical, number, dot and underscore'
+                    },
+                }
+            },
+            number: {
+                group: '.col-sm-8',
+                validators: {
+                    greaterThan: {
+                        value: 0
+                    },
+                    callback: {
+                        callback: function(value, validator) {
+                            var number = $('[name="number"]').val();
+                            var strMax = $('[name="maximum"]').val();
+                            var numArray = number.split('.');
+                            var maxArray = strMax.split('.');
+                            if (-1 == strMax) {
+                                maxArray = int_64_max;
+                            }
+
+                            if (numArray.length == 1) {
+                                var temp = Number(numArray[0]);
+                                if ( (temp <= int_64_max[0]) && (temp <= maxArray[0])) {
+                                    return true;
+                                }
+                            } else {
+                                var temp1 = Number(numArray[0]);
+                                if (temp1 > int_64_max[0]) {
+                                    return false;
+                                }
+                                if (numArray[1].length > 8) {
+                                   return false;
+                                }
+                                var temp2 = Number(numArray[1]);
+                                if ((temp1 <= maxArray[0] && temp2 <= maxArray[1] )) {
+                                    return true;
+                                } else if (numArray[1].length < 8) {
+                                    numArray[1] = Math.pow(10, 8-numArray[1].length) * numArray[1];
+                                }
+                            }
+
+                            return false;
+                        }
+                    }
+                }
+            },
+            maximum: {
+                group: '.col-sm-8',
+                validators: {
+                    callback: {
+                        message:"输入的最大值无效",
+                        callback: function(value, validator){
+                            var number = $('[name="maximum"]').val();
+                            if (value == -1) {
+                                return true;
+                            }
+                            if (value < 0) {
+                                return false;
+                            }
+                            var numArray = number.split('.');
+                            if (numArray.length == 1) {
+                                var temp = Number(numArray[0]);
+                                if (temp <= int_64_max[0]) {
+                                    return true;
+                                }
+                            } else {
+                                var temp1 = Number(numArray[0]);
+                                if (temp1 > int_64_max[0]) {
+                                    return false;
+                                }
+                                if (numArray[1].length > 8) {
+                                    return false;
+                                } else if (numArray[1].length < 8) {
+                                    numArray[1] = Math.pow(10, 8-numArray[1].length) * numArray[1];
+                                }
+                                var temp2 = Number(numArray[1]);
+                                if (temp1 < int_64_max[0] || (temp1 == int_64_max[0] && temp2 <= int_64_max[1])) {
+                                    return true;
+                                }
+                            }
+
+                            return false;
+                        }
+                    }
+                }
+            },
+            address: {
+                message: "the address is not valid",
+                group: '.col-sm-8',
+                validators: {
+
+                }
+            },
+            compName: {
+                message: "the compName is not valid",
+                group: '.col-sm-8',
+                validators: {
+
+                }
+            },
+            compID: {
+                message: "the compID is not valid",
+                group: '.col-sm-8',
+                validators: {
+
+                }
+            },
+        }
+    });
+
+    $("#check").click(function(){
+        var ret = $("form.form-horizontal").bootstrapValidator('validate');
+        var ret2 = $("form.form-horizontal").data('bootstrapValidator').isValid();
+        console.log(ret);
+        console.log(ret2);
+    });
+    
+    $("#create").click(function(){
+        var ecpair;
+        if ($("#secret").val().length == 0)
+            ecpair = BullockChain.ECPair.makeRandom();
+        else {
+            ecpair = BullockChain.ECPair.fromWIF($("#secret").val());
+        }
+
+        $("#secret").val(ecpair.toWIF());
+        $("#pubkey").val(ecpair.getPublicKeyBuffer().toString('hex'));
+        $("#address").val(ecpair.getAddress());
+    })
+
+    $("#sign").click(function(){
+        var msg = $("#msg").val();
+        var secret = $("#secret").val();
+        if (!secret.length) {
+            return;
+        }
+        $("form.form-horizontal").data('bootstrapValidator').validate(); 
+        if (!$("form.form-horizontal").data('bootstrapValidator').isValid()) {
+            return;
+        }
+        try {
+            var formArrry = $("input[name]");
+            var jsonMsg = {};
+            for(var i = 0; i < formArrry.length; i++) {
+            // formArrry.forEach( function(ele, index, array){
+                var tempEle = formArrry[i];
+                //var attrName = tempEle.getAttribute('name');
+                jsonMsg[tempEle.getAttribute('name')] = tempEle.value;
+            }
+            // var jsonMsg = JSON.parse(msg);
+            jsonMsg["version"] = 1;
+            // jsonMsg["number"] = jsonMsg["number"].toFixed(8);
+            // jsonMsg["maximum"] = jsonMsg["maximum"].toFixed(8);
+        } catch(error) {
+            window.alert('msg format is error!');
+            return;
+        }
+        var sortObj = sortObjectKeys(jsonMsg);
+        var msgstrBuffer = Buffer.from(JSON.stringify(sortObj));
+        var msgHexBuffer = Buffer.from(msgstrBuffer.toString('hex'));
+        var msgHash = BullockChain.crypto.hash256(msgHexBuffer);
+        // 注：比特币的hash是逆序输出。但不影响校验。
+        // msgHash.reverse();
+        var ecpair = BullockChain.ECPair.fromWIF(secret);
+        var sigature = ecpair.sign(msgHash);
+        var sigHex = sigature.toDER().toString('hex');
+
+        $("#msgHash").val(msgHash.toString('hex'))
+        $("#signHash").val(sigHex);
+        sortObj["sign"] = sigHex;
+        $("#jsonObj").val(JSON.stringify(sortObj));
+        var jsonBuffer = Buffer.from(JSON.stringify(sortObj));
+        $("#encodeResult").val(base58.encode(jsonBuffer));
+    });
+
+    $("#verify").click(function(){
+        var pubBuf = Buffer.from($("#pubkey").val(), 'hex');
+        var msgHash = Buffer.from($("#msgHash").val(), 'hex');
+        var ecpair = BullockChain.ECPair.fromPublicKeyBuffer(pubBuf);
+        var sigBuf = Buffer.from($("#signHash").val(), 'hex');
+        var sigature = BullockChain.ECSignature.fromDER(sigBuf);
+
+        // 解码
+        var decodeObj = base58.decode($("#encodeResult").val());
+        $("#decodeResult").val(decodeObj.toString());
+
+        var ret = ecpair.verify(msgHash, sigature);
+        $("#result").html(ret?"验证通过":'验证失败');
+    })
+})
+</script>
+</body>
+</html>
+
+
